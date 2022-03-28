@@ -7,7 +7,10 @@ from scapy.all import *
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QWidget, QTableView, QVBoxLayout, QTextEdit, QHBoxLayout, QSplitter, QComboBox, QPushButton
+
+RESOURCES_DIR = "./resources/"
 
 
 class SnifferWindow(QWidget):
@@ -19,14 +22,28 @@ class SnifferWindow(QWidget):
     def __setUpUI(self):
         """设置窗口组件"""
         self.ifaceSelect = QComboBox()
-        self.startButton = QPushButton("start")
-        self.endButton = QPushButton("end")
-        self.clearButton = QPushButton("clear")
+        self.ifaceSelect.setMaximumWidth(300)
+        self.startButton = QPushButton(QIcon(QPixmap(RESOURCES_DIR+"start.png")), None)
+        self.startButton.setFlat(True)
+        self.startButton.setToolTip("start")
+        self.endButton = QPushButton(QIcon(QPixmap(RESOURCES_DIR+"end.png")), None)
+        self.endButton.setFlat(True)
+        self.endButton.setToolTip("end")
+        self.clearButton = QPushButton(QIcon(QPixmap(RESOURCES_DIR+"clear.png")), None)
+        self.clearButton.setFlat(True)
+        self.clearButton.setToolTip("clear")
         layoutHeader = QHBoxLayout()
         layoutHeader.addWidget(self.ifaceSelect)
         layoutHeader.addWidget(self.startButton)
         layoutHeader.addWidget(self.endButton)
         layoutHeader.addWidget(self.clearButton)
+        layoutHeader.setStretch(0, 1)
+        layoutHeader.setStretch(1, 0)
+        layoutHeader.setStretch(2, 0)
+        layoutHeader.setStretch(3, 0)
+        layoutHeader.addStretch(1)
+        
+
 
         self.packetsView = QTableView()
 
@@ -55,3 +72,11 @@ class SnifferWindow(QWidget):
     def setModel(self, model):
         self.packetsView.setModel(model)
         self.packetsView.clicked.connect(self.transferCurrentPacket)
+        self.clearButton.clicked.connect(model.clear)
+
+    def setCapturer(self, source):
+        self.startButton.clicked.connect(source.start)
+        self.endButton.clicked.connect(source.end)
+
+    def setIfaces(self, ifaces: list):
+        self.ifaceSelect.addItems(ifaces)

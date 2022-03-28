@@ -13,9 +13,11 @@ class PacketsModel(QAbstractTableModel):
     def __init__(self, parent: typing.Optional[QObject] = None) -> None:
         super().__init__(parent)
         self.packets = []  # 存储数据包
-        self.parsePackets = []  # 解析成header格式
+        self.headerPackets = []  # 解析成header格式
+        self.treePackets = []  # 解析成tree格式
         self.packetsBuffer = []
-        self.parsePacketsBuffer = []
+        self.headerPacketsBuffer = []
+        self.treePacketsBuffer = []
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
         return len(self.packets)
@@ -34,7 +36,7 @@ class PacketsModel(QAbstractTableModel):
             return QVariant()
 
         if role == Qt.DisplayRole:
-            return self.parsePackets[index.row()][index.column()]
+            return self.headerPackets[index.row()][index.column()]
         else:
             return QVariant()
 
@@ -51,24 +53,30 @@ class PacketsModel(QAbstractTableModel):
         self.beginInsertRows(parent, row, row+count)
         for i in range(row, row+count):
             self.packets.insert(i, self.packetsBuffer[i-row])
-            self.parsePackets.insert(i, self.parsePacketsBuffer[i-row])
+            self.headerPackets.insert(i, self.headerPacketsBuffer[i-row])
+            self.treePackets.insert(i, self.treePacketsBuffer[i-row])
         self.endInsertRows()
         return True
 
     def removeRows(self, row: int, count: int, parent: QModelIndex = QModelIndex()) -> bool:
-        return super().removeRows(row, count, parent)
+        self.beginRemoveRows(parent, row, row+count)
+        del self.packets[row:row+count]
+        del self.headerPackets[row:row+count]
+        del self.treePackets[row:row+count]
+        self.endRemoveRows()
+        return True
 
-    def addPacket(self, packet, parsePacket):
+    def addPacket(self, packet, headerPacket, treePacket):
         self.packetsBuffer = [packet]
-        self.parsePacketsBuffer = [parsePacket]
+        self.headerPacketsBuffer = [headerPacket]
+        self.treePacketsBuffer = [treePacket]
         self.insertRows(self.rowCount(), 1)
 
     def getPacket(self, index):
         return self.packets[index]
 
-    def setSource(self, source):
-        """设置模型的数据源"""
-        source.captureSignal.connect(self.addPacket)
+    def clear(self):
+        self.removeRows(0, self.rowCount())
 
 
 class ParseModel(QAbstractItemModel):

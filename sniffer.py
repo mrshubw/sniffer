@@ -15,13 +15,19 @@ class Sniffer(QObject):
     def __init__(self, parent: typing.Optional['QObject'] = None) -> None:
         super().__init__(parent)
         self.capturer = Capturer()
+        self.parser = Parser(PacketsModel.header)
         self.packetsModel = PacketsModel()
         self.filterModel = QSortFilterProxyModel()
         self.window = SnifferWindow()
+        
+        self.captureThread = QThread()
+        self.captureThread.start()
+        self.capturer.moveToThread(self.captureThread)
 
         self.window.setModel(self.packetsModel)
-        self.packetsModel.setSource(self.capturer)
-        self.capturer.start()
+        self.window.setCapturer(self.capturer)
+        self.parser.parseSignal.connect(self.packetsModel.addPacket)
+        self.capturer.captureSignal.connect(self.parser.handle)
 
     def show(self):
         self.window.show()
