@@ -1,5 +1,6 @@
 """捕获底层数据包，传给数据model"""
 
+from socket import timeout
 import typing
 
 from PyQt5.QtCore import QObject, pyqtSignal, QCoreApplication
@@ -11,7 +12,7 @@ def getIfacesFromRoute():
     for net, msk, gw, iface, addr, metric in conf.route.routes:
         if_repr = resolve_iface(iface).description
         output.append(if_repr)
-    return output
+    return list(set(output))
 
 
 def getIfaces():
@@ -20,7 +21,7 @@ def getIfaces():
         dev = conf.ifaces.data[iface_name]
         prov = dev.provider
         output.append(prov._format(dev)[1])
-    return output
+    return list(set(output))
 
 
 class Capturer(QObject):
@@ -36,7 +37,7 @@ class Capturer(QObject):
 
     def run(self) -> None:
         while self.running:
-            sniff(filter=self.filter, prn=lambda packet:self.callBack(packet), iface=self.iface, count=1)
+            sniff(filter=self.filter, prn=lambda packet:self.callBack(packet), iface=self.iface, count=1, timeout=5)
             QCoreApplication.processEvents()
 
     def callBack(self, packet: typing.Optional[Packet]):
@@ -48,7 +49,9 @@ class Capturer(QObject):
             
         print("*****************************************")
 
-    def start(self):
+    def start(self, iface: str =None, filter_: str =None):
+        self.iface = self.iface if iface is None else iface
+        self.filter = self.filter if filter_ is None else filter_
         if not self.running:
             self.running = True
             self.run()

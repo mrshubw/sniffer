@@ -3,7 +3,7 @@
 import sys
 import typing
 
-from PyQt5.QtCore import QObject, QSortFilterProxyModel
+from PyQt5.QtCore import QObject, QSortFilterProxyModel, QThread
 from PyQt5.QtWidgets import QApplication
 
 from capture import *
@@ -19,6 +19,7 @@ class Sniffer(QObject):
         self.packetsModel = PacketsModel()
         self.filterModel = QSortFilterProxyModel()
         self.window = SnifferWindow()
+        self.window.setIfaces(getIfacesFromRoute())
         
         self.captureThread = QThread()
         self.captureThread.start()
