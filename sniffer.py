@@ -3,7 +3,7 @@
 import sys
 import typing
 
-from PyQt5.QtCore import QObject, QSortFilterProxyModel, QThread
+from PyQt5.QtCore import QObject, QSortFilterProxyModel, QThread, QRegExp
 from PyQt5.QtWidgets import QApplication
 
 from capture import *
@@ -25,10 +25,16 @@ class Sniffer(QObject):
         self.captureThread.start()
         self.capturer.moveToThread(self.captureThread)
 
-        self.window.setModel(self.packetsModel)
+        self.filterModel.setSourceModel(self.packetsModel)
+        self.window.setModel(self.filterModel)
         self.window.setCapturer(self.capturer)
         self.parser.parseSignal.connect(self.packetsModel.addPacket)
         self.capturer.captureSignal.connect(self.parser.handle)
+        self.window.showFilterSignal.connect(self.showFilter)
+
+    def showFilter(self, filterString):
+        self.filterModel.setFilterRegExp(QRegExp(filterString, Qt.CaseInsensitive, QRegExp.FixedString))
+        self.filterModel.setFilterKeyColumn(6)
 
     def show(self):
         self.window.show()

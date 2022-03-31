@@ -2,13 +2,15 @@
 
 import typing
 
-from PyQt5.QtCore import (QAbstractTableModel, QModelIndex, QObject, Qt, QAbstractItemModel,
-                          QVariant)
+from PyQt5.QtCore import (QAbstractItemModel, QAbstractTableModel, QModelIndex,
+                          QObject, Qt, QVariant)
+from PyQt5.QtGui import QColor
 
 
 class PacketsModel(QAbstractTableModel):
     """存储嗅探到的数据包的模型"""
     header = ["No", "Time", "Source", "Destination", "Protocol", "Length", "Info"]
+    protocolColor = {"Ethernet":"#000000", "IP":"#ff0000", "TCP": "#00ff00", "UDP":"#0000ff", "ARP":"#aa0000", "ICMP": "#00aa00", "DNS": "#0000aa", "HTTP":"#849567", "IPv6": "#624896"}
 
     def __init__(self, parent: typing.Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -37,6 +39,11 @@ class PacketsModel(QAbstractTableModel):
 
         if role == Qt.DisplayRole:
             return self.headerPackets[index.row()][index.column()]
+        elif role == Qt.BackgroundColorRole:
+            try:
+                return QColor(self.protocolColor[self.headerPackets[index.row()][4]])
+            except:
+                return QColor(Qt.white)
         else:
             return QVariant()
 
@@ -73,7 +80,7 @@ class PacketsModel(QAbstractTableModel):
         self.insertRows(self.rowCount(), 1)
 
     def getPacket(self, index):
-        return self.packets[index]
+        return self.packets[index], self.treePackets[index]
 
     def clear(self):
         self.removeRows(0, self.rowCount())
